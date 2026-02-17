@@ -1,9 +1,7 @@
-from PersonFactory import year_died
-
 
 class Person:
     def __init__(self, year_born,year_died,first_name,
-                 last_name,gender,spouse,is_founding_ancestor):
+                 last_name,gender):
         self.year_born = year_born
         self.year_died = year_died
         self.first_name = first_name
@@ -11,7 +9,8 @@ class Person:
         self.gender = gender
         self.spouse = None #initialize default as no spouse
         self.children = []
-        self.is_founding_ancestor = is_founding_ancestor
+        #bool: to distinguish the founder from descendants
+        self.is_founding_ancestor = False
 
     #Accessors
     def get_year_born(self):
@@ -19,12 +18,6 @@ class Person:
 
     def get_year_died(self):
         return self.first_name
-
-    #get age based on year input
-    def get_age(self,curr_year):
-        if curr_year <= self.year_born:
-            return 0
-        return curr_year - self.year_born
 
     def get_first_name(self):
         return self.first_name
@@ -57,7 +50,11 @@ class Person:
     def add_child(self,child):
         self.children.append(child)
 
-    def can_have_children(self,curr_year):
-        age = self.get_age(curr_year)
-        return 25 <= age <= 45
+    def set_first_name(self,first_name):
+        self.first_name = first_name
 
+    def set_last_name(self,last_name):
+        self.last_name = last_name
+
+    def make_founding_ancestor(self):
+        self.is_founding_ancestor = True
