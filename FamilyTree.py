@@ -51,7 +51,7 @@ class FamilyTree:
 
             # Spouse probabilistic assignment, if not progenitor
             elder_parent_age = curr_person.get_year_born()
-            if not curr_person.is_founding_ancestor() and self.factory.has_spouse(year_born):
+            if not curr_person.is_founding_ancestor and self.factory.has_spouse(year_born):
                 #set spouse details
                 spouse = self.factory.make_spouse(year_born,max_year)
 
@@ -74,8 +74,12 @@ class FamilyTree:
             for birth in child_birth_yrs:
                 if birth > max_year:
                     continue
-                #create child
+                #create child with unique child name
                 child = self.factory.make_descendant(birth,curr_person.get_last_name())
+                while not child.is_unique_name(curr_person):
+                    name, gender = self.factory.make_first_name_and_gender(birth)
+                    child.set_first_name(name)
+                    child.set_gender(gender)
                 #add to parents
                 curr_person.add_child(child)
                 #added to all people list
@@ -143,7 +147,7 @@ def main():
             number = len(duplicates)
             #grammar logic
             prep, s  = "are", "s"
-            if len == 1:
+            if number == 1:
                 are, s = "is", ""
             print(f"There {prep} {number} duplicate name{s} in the tree: ")
 
@@ -153,12 +157,12 @@ def main():
         #print total number of people by year option
         elif choice.upper() == "N":
             total_by_decade = tree.get_total_by_year()
-            print(f"Total people by decade: ")
+            print(f"Number of people by decade: ")
             #print year: number of people
             for decade in sorted(total_by_decade.keys()):
                 print(f"{decade} : {total_by_decade[decade]} ")
 
-        #secret choice: spouse number option
+        #print all couples (has spouse)
         elif choice.upper() == "S":
             total_couples = tree.get_total_married_couples()
             num = len(total_couples)

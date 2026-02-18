@@ -40,8 +40,16 @@ class Person:
     def get_children(self):
         return self.children
 
-    def is_first_ancestor(self):
+    def is_founding_ancestor(self):
         return self.is_founding_ancestor
+
+    # Bool: searches parent child list for duplicate first names
+    def is_unique_name(self, parent):
+        children = parent.get_children()
+        for child in children:
+            if child.get_first_name() == self.get_first_name():
+                return False
+        return True
 
     #mutators
     def set_spouse(self,spouse):
@@ -55,6 +63,9 @@ class Person:
 
     def set_last_name(self,last_name):
         self.last_name = last_name
+
+    def set_gender(self,gender):
+        self.gender = gender
 
     def make_founding_ancestor(self):
         self.is_founding_ancestor = True
