@@ -4,6 +4,7 @@ import Person
 import PersonFactory
 import PersonFactory as pf
 import random
+from collections import deque
 
 #methods:
     #geenerating family tree
@@ -40,16 +41,18 @@ class FamilyTree:
         BFS to process by generation
         """
         print(f"Generating family tree...")
-        #add one of the progenitor to queue randomly
+        #add one of the progenitors to queue randomly
         progenitor = random.choice([self.progenitor1,self.progenitor2])
-        queue = [progenitor]
+        queue = deque([progenitor])
+        #we run the queue until not valid children can be generated
         while queue:
-            curr_person: Person = queue.pop()
+            curr_person = queue.popleft()
             year_born = curr_person.get_year_born()
 
+            elder_parent_year_born = curr_person.get_year_born()
             # Spouse probabilistic assignment, if not progenitor
-            elder_parent_age = curr_person.get_year_born()
-            if curr_person != progenitor and self.factory.has_spouse(year_born):
+            if (year_born != progenitor.get_year_born()
+                    and self.factory.will_have_spouse(year_born)):
                 #set spouse details
                 spouse = self.factory.make_spouse(year_born,max_year)
 
@@ -57,12 +60,12 @@ class FamilyTree:
                     curr_person.set_spouse(spouse)
                     spouse.set_spouse(curr_person)
                     #pick the older of the two spouses
-                    elder_parent_age = min(spouse.get_year_born(),
+                    elder_parent_year_born = min(spouse.get_year_born(),
                                            curr_person.get_year_born())
                     self.all_family.append(spouse)
 
             #determine num of children & birth years
-            child_birth_yrs = self.factory.make_child_birth_years(elder_parent_age,
+            child_birth_yrs = self.factory.make_child_birth_years(elder_parent_year_born,
                                                                   curr_person.has_spouse())
 
             #generate children

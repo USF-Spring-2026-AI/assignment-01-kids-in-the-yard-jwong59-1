@@ -85,10 +85,10 @@ class PersonFactory:
         exp = life_ex.loc[life_ex['Year'] == year_born, "Period life expectancy at birth"].iloc[0]
         # randomly generate length +/- 10 years
         death_year = exp + year_born
-        return int(death_year + np.random.uniform(-10, 10))
+        return death_year + np.random.randint(-10, 10)
 
     # bool: will they have a spouse
-    def has_spouse(self,year_born):
+    def will_have_spouse(self,year_born):
         # compute decade
         decade = decades(year_born)
         birth_marr = self.birth_marriage
@@ -100,7 +100,7 @@ class PersonFactory:
     #makes a spouse for person by that person's birth year
     def make_spouse(self,year_born,max_year):
         #initialize spouse information
-        sp_year_born = random.randrange(year_born-10,year_born+10)
+        sp_year_born = year_born + np.random.randint(-10,10)
         #if year_born > max_year, no spouse yet
         if sp_year_born > max_year:
             return None
@@ -127,7 +127,7 @@ class PersonFactory:
             return []
         # pick a random year if 1 child
         if num_children == 1:
-            return [random.randrange(year_born + 25, year_born + 45)]
+            return [int(year_born + np.random.randint(25,45))]
         # https://stackoverflow.com/questions/6683690/making-a-list-of-evenly-spaced-numbers-in-a-certain-range-in-python
         # find evenly spaced birth years for 2+ children
         else:
