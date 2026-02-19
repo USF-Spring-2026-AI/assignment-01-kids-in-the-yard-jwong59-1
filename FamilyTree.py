@@ -3,25 +3,22 @@
 import Person
 import PersonFactory
 import PersonFactory as pf
+import random
 
 #methods:
     #geenerating family tree
     #respond to user queries
 class FamilyTree:
 
-    def __init__(self,year_start):
+    def __init__(self):
         #initialize factory instance
         self.factory = pf.PersonFactory()
         #first ancestors setup
-        self.year_start = year_start
-        self.progenitor1 = self.factory.make_non_descendant(self.year_start)
-        self.progenitor2 = self.factory.make_non_descendant(self.year_start)
-        self.progenitor1.make_founding_ancestor()
-        self.progenitor2.make_founding_ancestor()
-
-        #set ancestor as spouses
-        self.progenitor1.set_spouse = self.progenitor2
-        self.progenitor2.set_spouse = self.progenitor1
+        self.progenitor1 = self.factory.make_progenitor("Desmond","Jones","Male",1950)
+        self.progenitor2 = self.factory.make_progenitor("Molly","Smith","Female",1950)
+        #set progenitors as spouses
+        self.progenitor1.set_spouse(self.progenitor2)
+        self.progenitor2.set_spouse(self.progenitor1)
 
         # list of all descendants of ancestors
         self.all_family = []
@@ -39,19 +36,20 @@ class FamilyTree:
         :param max_year: int
         :return: None
 
-        Generate tree starting with founding couple
+        Generate tree starting with progenitor couple
         BFS to process by generation
         """
         print(f"Generating family tree...")
-        queue = [self.progenitor1]
-
+        #add one of the progenitor to queue randomly
+        progenitor = random.choice([self.progenitor1,self.progenitor2])
+        queue = [progenitor]
         while queue:
             curr_person: Person = queue.pop()
             year_born = curr_person.get_year_born()
 
             # Spouse probabilistic assignment, if not progenitor
             elder_parent_age = curr_person.get_year_born()
-            if not curr_person.is_founding_ancestor and self.factory.has_spouse(year_born):
+            if curr_person != progenitor and self.factory.has_spouse(year_born):
                 #set spouse details
                 spouse = self.factory.make_spouse(year_born,max_year)
 
@@ -63,15 +61,13 @@ class FamilyTree:
                                            curr_person.get_year_born())
                     self.all_family.append(spouse)
 
-
-
-
             #determine num of children & birth years
             child_birth_yrs = self.factory.make_child_birth_years(elder_parent_age,
                                                                   curr_person.has_spouse())
 
             #generate children
             for birth in child_birth_yrs:
+                # Stop tree generation once we pass the max_year window
                 if birth > max_year:
                     continue
                 #create child with unique child name
@@ -86,9 +82,10 @@ class FamilyTree:
                 self.all_family.append(child)
                 #add child to queue
                 queue.append(child)
+
         print(f"Family Tree Generated!")
 
-    #returns dictionary of
+    #returns dictionary of duplicate names
     def get_duplicates(self):
         names_map = {}
 
@@ -111,18 +108,9 @@ class FamilyTree:
             total_by_year[decade] = total_by_year.get(decade,0)+1
         return total_by_year
 
-    #returns total married couples
-    def get_total_married_couples(self):
-        all_couples = {}
-        for person in self.all_family:
-            name = person.get_full_name()
-            if person.has_spouse() and name not in all_couples and name not in all_couples.values():
-                all_couples[name] = person.get_spouse().get_full_name()
-        return all_couples
-
 #main menu loop
 def main():
-    tree = FamilyTree(year_start=1950)
+    tree = FamilyTree()
     tree.generate_descendant_tree(max_year=2120)
     print("=" * 20)
     while True:
@@ -130,19 +118,19 @@ def main():
         print(f"(T)otal number of people in the tree")
         print(f"Total (N)umber of people in the tree by decade")
         print(f"All (D)uplicated names in the tree")
-        print(f"All Couple(S) in the tree")
         print(f"(E)xit menu.")
 
-        choice = input("> ")
+        user_input = input("> ")
+        choice = user_input.strip().upper()
         #exit option
-        if choice.upper() == "E":
+        if choice == "E":
             break
         #print total people option
-        elif choice.upper() == "T":
+        elif choice == "T":
             total_family = tree.get_total_family()
             print(f"The tree contains {total_family} people total.")
         #print duplicates option
-        elif choice.upper() == "D":
+        elif choice == "D":
             duplicates = tree.get_duplicates()
             number = len(duplicates)
             #grammar logic
@@ -155,24 +143,15 @@ def main():
                 for name in duplicates:
                     print(f" * {name}")
         #print total number of people by year option
-        elif choice.upper() == "N":
+        elif choice == "N":
             total_by_decade = tree.get_total_by_year()
             print(f"Number of people by decade: ")
             #print year: number of people
             for decade in sorted(total_by_decade.keys()):
                 print(f"{decade} : {total_by_decade[decade]} ")
-
-        #print all couples (has spouse)
-        elif choice.upper() == "S":
-            total_couples = tree.get_total_married_couples()
-            num = len(total_couples)
-            #grammar logic
-            prep, s = "are","s"
-            if num == 1:
-                prep,s = "is",""
-            print(f"There {prep} {num} couple{s} in the tree: ")
-            for person in sorted(total_couples.keys()):
-                print(f"{person:^20} : {total_couples[person]:^20}")
+        elif choice == "Q":
+            for people in tree.all_family:
+                print(people.get_full_name())
         #invalid choice case
         else:
             print(f"<{choice}> is an invalid choice")

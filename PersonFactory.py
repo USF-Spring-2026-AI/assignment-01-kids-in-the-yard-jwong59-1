@@ -4,13 +4,13 @@
 import random
 import pandas as pd
 import numpy as np
-import Person
+from sympy.physics.units import frequency
 
+import Person
 
 #converts year into corresponding decade. "YYYYs"
 def decades(year):
     return str((year // 10) * 10) + "s"
-
 
 class PersonFactory:
     def __init__(self):
@@ -33,16 +33,9 @@ class PersonFactory:
         self.life_expectancy = pd.read_csv("life_expectancy.csv")
         self.rank_prob = pd.read_csv("rank_to_probability.csv")
 
-    def make_non_descendant(self, year_born):
-        """
-        creates person with random firstname,lastname,gender,year died
-        used for non-direct descendants
-        :param year_born:
-        :return: Person object
-        """
+    def make_progenitor(self, first_name,last_name,gender,year_born):
         year_died = self.make_year_died(year_born)
-        first_name, gender = self.make_first_name_and_gender(year_born)
-        last_name = self.make_last_name(year_born)
+        first_name,last_name, gender = first_name,last_name,gender
         return Person.Person(year_born,year_died,first_name,last_name,gender)
 
     #creates a direct descendant
@@ -66,6 +59,7 @@ class PersonFactory:
         nm_sel = first_nm[(first_nm['gender'] == gender) & (first_nm['decade'] == decade)]
 
         #normalize probabilities to sum = 1
+        # https://numpy.org/doc/stable/reference/random/generated/numpy.random.choice.html
         probs = nm_sel['frequency'] / nm_sel['frequency'].sum()
         name = np.random.choice(nm_sel['name'],p=probs)
         return name, gender
@@ -82,6 +76,7 @@ class PersonFactory:
         total = sum(ranks)
         norm_ranks = [num / total for num in ranks]
         # return chosen name
+        # https://numpy.org/doc/stable/reference/random/generated/numpy.random.choice.html
         return np.random.choice(last_name_pool['LastName'], p=norm_ranks)
 
     def make_year_died(self,year_born):
@@ -99,10 +94,8 @@ class PersonFactory:
         birth_marr = self.birth_marriage
         # locate marriage rate based on decade
         marr_rate = birth_marr.loc[birth_marr['decade'] == decade, "marriage_rate"].iloc[0]
-        # randomly decide if there is a spouse
-        options = [True, False]
-        prob = [marr_rate, 1.0 - marr_rate]
-        return np.random.choice(options, p=prob)
+        # decide if there is a spouse based on marr rate
+        return random.random() < marr_rate
 
     #makes a spouse for person by that person's birth year
     def make_spouse(self,year_born,max_year):
@@ -123,9 +116,9 @@ class PersonFactory:
     # returns a list of children birth_years
     def make_child_birth_years(self, year_born, has_spouse):
         decade = decades(year_born)
-        b_rate = self.birth_marriage.loc[self.birth_marriage['decade'] == decade, "birth_rate"].iloc[0]
+        birth_rate = self.birth_marriage.loc[self.birth_marriage['decade'] == decade, "birth_rate"].iloc[0]
         # determine number of children by rate
-        num_children = round(b_rate + np.random.uniform(-1.5, 1.5))
+        num_children = round(birth_rate + np.random.uniform(-1.5, 1.5))
         # with no spouse, should be 1 less
         if not has_spouse:
             num_children = max(0, num_children - 1)
@@ -140,9 +133,3 @@ class PersonFactory:
         else:
             children = np.round(np.linspace(year_born + 25, year_born + 45, num=num_children, dtype=int))
             return children
-
-
-
-
-
-

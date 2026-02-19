@@ -9,8 +9,6 @@ class Person:
         self.gender = gender
         self.spouse = None #initialize default as no spouse
         self.children = []
-        #bool: to distinguish the founder from descendants
-        self.is_founding_ancestor = False
 
     #Accessors
     def get_year_born(self):
@@ -40,9 +38,6 @@ class Person:
     def get_children(self):
         return self.children
 
-    def is_founding_ancestor(self):
-        return self.is_founding_ancestor
-
     # Bool: searches parent child list for duplicate first names
     def is_unique_name(self, parent):
         children = parent.get_children()
@@ -66,6 +61,3 @@ class Person:
 
     def set_gender(self,gender):
         self.gender = gender
-
-    def make_founding_ancestor(self):
-        self.is_founding_ancestor = True
